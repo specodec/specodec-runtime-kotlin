@@ -1,0 +1,25 @@
+package specodec
+
+class GronReader(data: ByteArray) {
+    fun readString(): String = throw SCodecError("internal", "GronReader: not implemented")
+    fun readBool(): Boolean = throw SCodecError("internal", "GronReader: not implemented")
+    fun readInt32(): Int = throw SCodecError("internal", "GronReader: not implemented")
+    fun readInt64(): Long = throw SCodecError("internal", "GronReader: not implemented")
+    fun readUint32(): Int = throw SCodecError("internal", "GronReader: not implemented")
+    fun readUint64(): Long = throw SCodecError("internal", "GronReader: not implemented")
+    fun readFloat32(): Float = throw SCodecError("internal", "GronReader: not implemented")
+    fun readFloat64(): Double = throw SCodecError("internal", "GronReader: not implemented")
+    fun readNull(): Unit = throw SCodecError("internal", "GronReader: not implemented")
+    fun readBytes(): ByteArray = throw SCodecError("internal", "GronReader: not implemented")
+    fun beginObject(): Unit = throw SCodecError("internal", "GronReader: not implemented")
+    fun hasNextField(): Boolean = throw SCodecError("internal", "GronReader: not implemented")
+    fun readFieldName(): String = throw SCodecError("internal", "GronReader: not implemented")
+    fun nextFieldSeparator(): Unit = throw SCodecError("internal", "GronReader: not implemented")
+    fun endObject(): Unit = throw SCodecError("internal", "GronReader: not implemented")
+    fun beginArray(): Unit = throw SCodecError("internal", "GronReader: not implemented")
+    fun hasNextElement(): Boolean = throw SCodecError("internal", "GronReader: not implemented")
+    fun nextElementSeparator(): Unit = throw SCodecError("internal", "GronReader: not implemented")
+    fun endArray(): Unit = throw SCodecError("internal", "GronReader: not implemented")
+    fun isNull(): Boolean = throw SCodecError("internal", "GronReader: not implemented")
+    fun skip(): Unit = throw SCodecError("internal", "GronReader: not implemented")
+}
