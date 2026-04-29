@@ -2,10 +2,11 @@ package specodec
 
 class SCodecError(val code: String, message: String) : Exception(message)
 
-class JsonReader(data: ByteArray) {
+class JsonReader(data: ByteArray) : SpecReader {
     private val src: String = data.decodeToString()
     private var pos: Int = 0
-    private val containerCount: MutableList<Int> = mutableListOf()
+    private val _firstField: MutableList<Boolean> = mutableListOf()
+    private val _firstElem: MutableList<Boolean> = mutableListOf()
 
     fun pos(): Int = pos
 
@@ -111,21 +112,21 @@ class JsonReader(data: ByteArray) {
         return src.substring(start, pos)
     }
 
-    fun readString(): String = parseString()
+    override fun readString(): String = parseString()
 
-    fun readBool(): Boolean {
+    override fun readBool(): Boolean {
         val ch = peek()
         if (ch == 't') { for (c in "true") if (read() != c) throw SCodecError("internal", "json: expected true"); return true }
         if (ch == 'f') { for (c in "false") if (read() != c) throw SCodecError("internal", "json: expected false"); return false }
         throw SCodecError("internal", "json: expected bool, got '$ch'")
     }
 
-    fun readInt32(): Int {
+    override fun readInt32(): Int {
         val raw = parseNumberRaw()
         return raw.toIntOrNull() ?: throw SCodecError("internal", "json: invalid int32: $raw")
     }
 
-    fun readInt64(): Long {
+    override fun readInt64(): Long {
         if (peek() == '"') {
             val s = parseString()
             return s.toLongOrNull() ?: throw SCodecError("internal", "json: invalid int64: $s")
@@ -134,14 +135,14 @@ class JsonReader(data: ByteArray) {
         return raw.toLongOrNull() ?: throw SCodecError("internal", "json: invalid int64: $raw")
     }
 
-    fun readUint32(): Int {
+    override fun readUint32(): Int {
         val raw = parseNumberRaw()
         val v = raw.toIntOrNull() ?: throw SCodecError("internal", "json: invalid uint32: $raw")
         if (v < 0 || v > 4294967295L) throw SCodecError("internal", "json: uint32 overflow: $raw")
         return v
     }
 
-    fun readUint64(): Long {
+    override fun readUint64(): Long {
         if (peek() == '"') {
             val s = parseString()
             return s.toULongOrNull()?.toLong() ?: throw SCodecError("internal", "json: invalid uint64: $s")
@@ -150,78 +151,100 @@ class JsonReader(data: ByteArray) {
         return raw.toULongOrNull()?.toLong() ?: throw SCodecError("internal", "json: invalid uint64: $raw")
     }
 
-    fun readFloat32(): Float {
+    override fun readFloat32(): Float {
         val raw = parseNumberRaw()
         return raw.toFloatOrNull() ?: throw SCodecError("internal", "json: invalid float32: $raw")
     }
 
-    fun readFloat64(): Double {
+    override fun readFloat64(): Double {
         val raw = parseNumberRaw()
         return raw.toDoubleOrNull() ?: throw SCodecError("internal", "json: invalid float64: $raw")
     }
 
-    fun readNull() {
+    override fun readNull() {
         for (c in "null") if (read() != c) throw SCodecError("internal", "json: expected null")
     }
 
-    fun readBytes(): ByteArray {
+    override fun readBytes(): ByteArray {
         val s = parseString()
-        return b64Decode(s)
-    }
-
-    private fun b64Decode(s: String): ByteArray {
         val lookup = IntArray(128) { -1 }
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".forEachIndexed { i, c -> lookup[c.code] = i }
-        val buf = ByteArray(s.length * 3 / 4 - (if (s.endsWith("==")) 2 else if (s.endsWith("=")) 1 else 0))
-        var bi = 0
+        val out = mutableListOf<Byte>()
         var i = 0
         while (i < s.length) {
-            val a = lookup[s[i].code]
-            val b = lookup[s[i + 1].code]
-            val c = if (s[i + 2] == '=') -1 else lookup[s[i + 2].code]
-            val d = if (s[i + 3] == '=') -1 else lookup[s[i + 3].code]
+            val a = lookup[s[i].code]; val b = lookup[s[i+1].code]
+            val c = if (s[i+2] == '=') -1 else lookup[s[i+2].code]
+            val d = if (s[i+3] == '=') -1 else lookup[s[i+3].code]
             if (a < 0 || b < 0) throw SCodecError("internal", "json: invalid base64")
-            buf[bi++] = ((a shl 2) or (b shr 4)).toByte()
-            if (c >= 0) {
-                buf[bi++] = (((b and 0xF) shl 4) or (c shr 2)).toByte()
-                if (d >= 0) buf[bi++] = (((c and 0x3) shl 6) or d).toByte()
-            }
+            out.add(((a shl 2) or (b shr 4)).toByte())
+            if (c >= 0) { out.add((((b and 0xF) shl 4) or (c shr 2)).toByte()); if (d >= 0) out.add((((c and 0x3) shl 6) or d).toByte()) }
             i += 4
         }
-        return buf
+        return out.toByteArray()
     }
 
-    fun readEnum(): String = parseString()
+    override fun readEnum(): String = parseString()
 
-    fun beginObject() { expect('{') }
+    override fun beginObject() {
+        expect('{')
+        _firstField.add(true)
+    }
 
-    fun hasNextField(): Boolean = peek() != '}'
-
-    fun readFieldName(): String = parseString()
-
-    fun nextFieldSeparator() {
+    override fun hasNextField(): Boolean {
         val ch = peek()
-        if (ch == ',') pos++
-        else if (ch != '}') throw SCodecError("internal", "json: expected ',' or '}', got '$ch'")
+        if (ch == '}') {
+            _firstField.removeAt(_firstField.size - 1)
+            return false
+        }
+        val top = _firstField.size - 1
+        if (!_firstField[top]) {
+            if (ch != ',') throw SCodecError("internal", "json: expected ',' or '}', got '$ch'")
+            pos++
+        } else {
+            _firstField[top] = false
+        }
+        return true
     }
 
-    fun endObject() { expect('}') }
+    override fun readFieldName(): String {
+        val key = parseString()
+        ws()
+        if (pos < src.length && src[pos] == ':') {
+            pos++
+        } else {
+            throw SCodecError("internal", "json: expected ':' after field name '$key'")
+        }
+        return key
+    }
 
-    fun beginArray() { expect('[') }
+    override fun endObject() { expect('}') }
 
-    fun hasNextElement(): Boolean = peek() != ']'
+    override fun beginArray() {
+        expect('[')
+        _firstElem.add(true)
+    }
 
-    fun nextElementSeparator() {
+    override fun hasNextElement(): Boolean {
         val ch = peek()
-        if (ch == ',') pos++
-        else if (ch != ']') throw SCodecError("internal", "json: expected ',' or ']', got '$ch'")
+        if (ch == ']') {
+            _firstElem.removeAt(_firstElem.size - 1)
+            return false
+        }
+        val top = _firstElem.size - 1
+        if (!_firstElem[top]) {
+            if (ch != ',') throw SCodecError("internal", "json: expected ',' or ']', got '$ch'")
+            pos++
+        } else {
+            _firstElem[top] = false
+        }
+        return true
     }
 
-    fun endArray() { expect(']') }
+    override fun endArray() { expect(']') }
 
-    fun isNull(): Boolean = peek() == 'n'
+    override fun isNull(): Boolean = peek() == 'n'
 
-    fun skip() {
+    override fun skip() {
         ws()
         if (pos >= src.length) throw SCodecError("internal", "json: unexpected end of input")
         val ch = src[pos]
@@ -237,22 +260,15 @@ class JsonReader(data: ByteArray) {
             }
             '{' -> {
                 beginObject()
-                var first = true
                 while (hasNextField()) {
-                    if (!first) nextFieldSeparator()
-                    first = false
                     readFieldName()
-                    expect(':')
                     skip()
                 }
                 endObject()
             }
             '[' -> {
                 beginArray()
-                var first = true
                 while (hasNextElement()) {
-                    if (!first) nextElementSeparator()
-                    first = false
                     skip()
                 }
                 endArray()

@@ -1,6 +1,6 @@
 package specodec
 
-class MsgPackReader(private val data: ByteArray) {
+class MsgPackReader(private val data: ByteArray) : SpecReader {
     private var pos: Int = 0
     var containerCount: MutableList<Int> = mutableListOf()
 
@@ -62,7 +62,7 @@ class MsgPackReader(private val data: ByteArray) {
         throw SCodecError("internal", "msgpack: expected array, got 0x${b.toString(16)}")
     }
 
-    fun readString(): String {
+    override fun readString(): String {
         val b = readByte().toInt() and 0xFF
         val len: Int = when {
             b and 0xE0 == 0xA0 -> b and 0x1F
@@ -98,21 +98,48 @@ class MsgPackReader(private val data: ByteArray) {
         throw SCodecError("internal", "msgpack: expected float, got 0x${b.toString(16)}")
     }
 
-    fun readBool(): Boolean {
+    override fun readBool(): Boolean {
         val b = readByte().toInt() and 0xFF
         if (b == 0xC3) return true
         if (b == 0xC2) return false
         throw SCodecError("internal", "msgpack: expected bool, got 0x${b.toString(16)}")
     }
 
-    fun readNull() {
+    override fun readNull() {
         val b = readByte().toInt() and 0xFF
         if (b != 0xC0) throw SCodecError("internal", "msgpack: expected null, got 0x${b.toString(16)}")
     }
 
-    fun isNull(): Boolean = pos < data.size && data[pos] == (0xC0).toByte()
+    override fun readInt32(): Int = readInt().toInt()
 
-    fun skip() {
+    override fun readUint32(): Int = (readInt().toLong() and 0xFFFFFFFFL).toInt()
+
+    override fun readUint64(): Long = readInt()
+
+    override fun readInt64(): Long = readInt()
+
+    override fun readFloat32(): Float = readFloat().toFloat()
+
+    override fun readFloat64(): Double = readFloat()
+
+    override fun readBytes(): ByteArray {
+        val b = readByte().toInt() and 0xFF
+        val len = when (b) {
+            0xC4 -> readByte().toInt() and 0xFF
+            0xC5 -> readU16()
+            0xC6 -> readU32()
+            else -> throw SCodecError("internal", "msgpack: expected bin, got 0x${b.toString(16)}")
+        }
+        val v = data.sliceArray(pos until pos + len)
+        pos += len
+        return v
+    }
+
+    override fun readEnum(): String = readString()
+
+    override fun isNull(): Boolean = pos < data.size && data[pos] == (0xC0).toByte()
+
+    override fun skip() {
         val b = readByte().toInt() and 0xFF
         if (b <= 0x7F || b >= 0xE0) return
         if (b and 0xF0 == 0x80) {
@@ -152,12 +179,12 @@ class MsgPackReader(private val data: ByteArray) {
         }
     }
 
-    fun beginObject() {
+    override fun beginObject() {
         val n = readMapHeader()
         containerCount.add(n)
     }
 
-    fun hasNextField(): Boolean {
+    override fun hasNextField(): Boolean {
         val top = containerCount.size - 1
         if (containerCount[top] > 0) {
             containerCount[top] = containerCount[top] - 1
@@ -167,17 +194,17 @@ class MsgPackReader(private val data: ByteArray) {
         return false
     }
 
-    fun readFieldName(): String = readString()
+    override fun readFieldName(): String = readString()
 
-    fun endObject() {
+    override fun endObject() {
     }
 
-    fun beginArray() {
+    override fun beginArray() {
         val n = readArrayHeader()
         containerCount.add(n)
     }
 
-    fun hasNextElement(): Boolean {
+    override fun hasNextElement(): Boolean {
         val top = containerCount.size - 1
         if (containerCount[top] > 0) {
             containerCount[top] = containerCount[top] - 1
@@ -187,6 +214,6 @@ class MsgPackReader(private val data: ByteArray) {
         return false
     }
 
-    fun endArray() {
+    override fun endArray() {
     }
 }
