@@ -12,8 +12,8 @@ interface SpecReader {
     fun readBool(): Boolean
     fun readInt32(): Int
     fun readInt64(): Long
-    fun readUint32(): Int
-    fun readUint64(): Long
+    fun readUint32(): UInt
+    fun readUint64(): ULong
     fun readFloat32(): Float
     fun readFloat64(): Double
     fun readNull()

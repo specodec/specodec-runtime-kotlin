@@ -32,8 +32,8 @@ class MsgPackReader(private val data: ByteArray) : SpecReader {
     }
 
     private fun readI32(): Int {
-        val v = readU32()
-        return if (v > 0x7FFFFFFF) v - 0x100000000 else v
+        val v = readU32().toLong()
+        return (if (v > 0x7FFFFFFF) v - 0x100000000 else v).toInt()
     }
 
     private fun readF32(): Float {
@@ -87,6 +87,8 @@ class MsgPackReader(private val data: ByteArray) : SpecReader {
             b == 0xD0 -> return readByte().toLong()
             b == 0xD1 -> return readI16().toLong()
             b == 0xD2 -> return readI32().toLong()
+            b == 0xD3 -> return ((readU32().toLong() and 0xFFFFFFFFL) shl 32) or (readU32().toLong() and 0xFFFFFFFFL)
+            b == 0xCF -> return ((readU32().toLong() and 0xFFFFFFFFL) shl 32) or (readU32().toLong() and 0xFFFFFFFFL)
         }
         throw SCodecError("internal", "msgpack: expected int, got 0x${b.toString(16)}")
     }
@@ -95,6 +97,24 @@ class MsgPackReader(private val data: ByteArray) : SpecReader {
         val b = readByte().toInt() and 0xFF
         if (b == 0xCA) return readF32().toDouble()
         if (b == 0xCB) return readF64()
+        if (b <= 0x7F) return b.toDouble()
+        if (b >= 0xE0) return (b - 0x100).toDouble()
+        if (b == 0xCC) return (readByte().toInt() and 0xFF).toDouble()
+        if (b == 0xCD) return readU16().toDouble()
+        if (b == 0xCE) return (readU32().toLong() and 0xFFFFFFFFL).toDouble()
+        if (b == 0xCF) {
+            val hi = readU32().toLong() and 0xFFFFFFFFL
+            val lo = readU32().toLong() and 0xFFFFFFFFL
+            return Double.fromBits((hi shl 32) or lo)
+        }
+        if (b == 0xD0) return readByte().toDouble()
+        if (b == 0xD1) return readI16().toDouble()
+        if (b == 0xD2) return readI32().toDouble()
+        if (b == 0xD3) {
+            val hi = readU32().toLong() and 0xFFFFFFFFL
+            val lo = readU32().toLong() and 0xFFFFFFFFL
+            return Double.fromBits((hi shl 32) or lo)
+        }
         throw SCodecError("internal", "msgpack: expected float, got 0x${b.toString(16)}")
     }
 
@@ -112,9 +132,9 @@ class MsgPackReader(private val data: ByteArray) : SpecReader {
 
     override fun readInt32(): Int = readInt().toInt()
 
-    override fun readUint32(): Int = (readInt().toLong() and 0xFFFFFFFFL).toInt()
+    override fun readUint32(): UInt = readInt().let { v -> (v and 0xFFFFFFFFL).toUInt() }
 
-    override fun readUint64(): Long = readInt()
+    override fun readUint64(): ULong = readInt().let { it.toULong() }
 
     override fun readInt64(): Long = readInt()
 

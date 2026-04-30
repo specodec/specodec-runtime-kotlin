@@ -1,0 +1,13 @@
+FROM dhi.io/gradle:9-jdk25-alpine3.23-dev AS builder
+WORKDIR /app
+ARG HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy
+ENV http_proxy=${HTTP_PROXY} https_proxy=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY} HTTPS_PROXY=${HTTPS_PROXY} ALL_PROXY=${ALL_PROXY}
+COPY build.gradle.kts settings.gradle.kts ./
+COPY src/ src/
+RUN --mount=type=cache,target=/root/.gradle/caches \
+    --mount=type=cache,target=/root/.gradle/wrapper \
+    gradle jvmJar jsBrowserProductionLibraryPrepareKotlinGradlePluginWarnings --no-daemon -q 2>&1 || \
+    gradle jvmJar --no-daemon -q
+
+FROM scratch
+COPY --from=builder /app/build/libs/ /out/

@@ -60,25 +60,33 @@ class JsonWriter {
         sb.append('"')
     }
 
-    fun writeUint32(value: Long) {
-        sb.append(value)
+    fun writeUint32(value: UInt) {
+        sb.append(value.toLong())
     }
 
-    fun writeUint64(value: Long) {
+    fun writeUint64(value: ULong) {
         sb.append('"')
         sb.append(value)
         sb.append('"')
+    }
+
+    private fun fmtFloat(value: Double): String {
+        val s = value.toString()
+        if (s.contains('.') && !s.contains('E', ignoreCase = true)) {
+            return s.trimEnd('0').trimEnd('.')
+        }
+        return s
     }
 
     fun writeFloat32(value: Float) {
         val v = value
         if (v.isNaN() || v.isInfinite()) throw IllegalArgumentException("float32: NaN/Infinity not valid JSON")
-        sb.append(v)
+        sb.append(fmtFloat(v.toDouble()))
     }
 
     fun writeFloat64(value: Double) {
         if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("float64: NaN/Infinity not valid JSON")
-        sb.append(value)
+        sb.append(fmtFloat(value))
     }
 
     fun writeNull() {
@@ -108,6 +116,7 @@ class JsonWriter {
         firstItem[top] = false
         sb.append('"')
         escape(name)
+        sb.append('"')
         sb.append(':')
     }
 

@@ -90,6 +90,7 @@ class JsonReader(data: ByteArray) : SpecReader {
     }
 
     private fun parseNumberRaw(): String {
+        ws()
         val start = pos
         if (pos < src.length && src[pos] == '-') pos++
         if (pos >= src.length) throw SCodecError("internal", "json: unexpected end of number")
@@ -135,20 +136,18 @@ class JsonReader(data: ByteArray) : SpecReader {
         return raw.toLongOrNull() ?: throw SCodecError("internal", "json: invalid int64: $raw")
     }
 
-    override fun readUint32(): Int {
+    override fun readUint32(): UInt {
         val raw = parseNumberRaw()
-        val v = raw.toIntOrNull() ?: throw SCodecError("internal", "json: invalid uint32: $raw")
-        if (v < 0 || v > 4294967295L) throw SCodecError("internal", "json: uint32 overflow: $raw")
-        return v
+        return raw.toUIntOrNull() ?: throw SCodecError("internal", "json: invalid uint32: $raw")
     }
 
-    override fun readUint64(): Long {
+    override fun readUint64(): ULong {
         if (peek() == '"') {
             val s = parseString()
-            return s.toULongOrNull()?.toLong() ?: throw SCodecError("internal", "json: invalid uint64: $s")
+            return s.toULongOrNull() ?: throw SCodecError("internal", "json: invalid uint64: $s")
         }
         val raw = parseNumberRaw()
-        return raw.toULongOrNull()?.toLong() ?: throw SCodecError("internal", "json: invalid uint64: $raw")
+        return raw.toULongOrNull() ?: throw SCodecError("internal", "json: invalid uint64: $raw")
     }
 
     override fun readFloat32(): Float {

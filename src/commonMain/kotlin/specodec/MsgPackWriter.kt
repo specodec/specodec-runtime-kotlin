@@ -50,22 +50,25 @@ class MsgPackWriter {
         }
     }
 
-    fun writeUint32(value: Long) {
+    fun writeUint32(value: UInt) {
+        val v = value.toLong()
         when {
-            value <= 0x7F -> writeByte(value.toByte())
-            value <= 0xFF -> { writeByte(0xCC.toByte()); writeByte(value.toByte()) }
-            value <= 0xFFFF -> { writeByte(0xCD.toByte()); writeU16(value.toInt()) }
-            else -> { writeByte(0xCE.toByte()); writeU32(value.toInt()) }
+            v <= 0x7F -> writeByte(v.toByte())
+            v <= 0xFF -> { writeByte(0xCC.toByte()); writeByte(v.toByte()) }
+            v <= 0xFFFF -> { writeByte(0xCD.toByte()); writeU16(v.toInt()) }
+            else -> { writeByte(0xCE.toByte()); writeU32(v.toInt()) }
         }
     }
 
-    fun writeUint64(value: Long) {
+    fun writeUint64(value: ULong) {
+        val v = value.toLong()
+        val vu = value
         when {
-            value <= 0x7F -> writeByte(value.toByte())
-            value <= 0xFF -> { writeByte(0xCC.toByte()); writeByte(value.toByte()) }
-            value <= 0xFFFF -> { writeByte(0xCD.toByte()); writeU16(value.toInt()) }
-            value <= 0xFFFFFFFFL -> { writeByte(0xCE.toByte()); writeU32(value.toInt()) }
-            else -> { writeByte(0xCF.toByte()); writeU64(value) }
+            vu <= 0x7FuL -> writeByte(v.toByte())
+            vu <= 0xFFuL -> { writeByte(0xCC.toByte()); writeByte(v.toByte()) }
+            vu <= 0xFFFFuL -> { writeByte(0xCD.toByte()); writeU16(v.toInt()) }
+            vu <= 0xFFFFFFFFuL -> { writeByte(0xCE.toByte()); writeU32(v.toInt()) }
+            else -> { writeByte(0xCF.toByte()); writeU64(v) }
         }
     }
 
