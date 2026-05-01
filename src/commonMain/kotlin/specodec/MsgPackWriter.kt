@@ -1,6 +1,6 @@
 package specodec
 
-class MsgPackWriter {
+class MsgPackWriter : SpecWriter {
     private val buf: MutableList<Byte> = mutableListOf()
 
     private fun writeByte(b: Byte) { buf.add(b) }
@@ -8,7 +8,7 @@ class MsgPackWriter {
     private fun writeU32(v: Int) { buf.add((v shr 24).toByte()); buf.add((v shr 16).toByte()); buf.add((v shr 8).toByte()); buf.add(v.toByte()) }
     private fun writeU64(v: Long) { writeU32((v shr 32).toInt()); writeU32(v.toInt()) }
 
-    fun writeString(value: String) {
+    override fun writeString(value: String) {
         val bytes = value.encodeToByteArray()
         val len = bytes.size
         when {
@@ -20,9 +20,9 @@ class MsgPackWriter {
         buf.addAll(bytes.toList())
     }
 
-    fun writeBool(value: Boolean) { writeByte(if (value) 0xC3.toByte() else 0xC2.toByte()) }
+    override fun writeBool(value: Boolean) { writeByte(if (value) 0xC3.toByte() else 0xC2.toByte()) }
 
-    fun writeInt32(value: Int) {
+    override fun writeInt32(value: Int) {
         when {
             value in 0..0x7F -> writeByte(value.toByte())
             value in -0x20..-1 -> writeByte(value.toByte())
@@ -35,7 +35,7 @@ class MsgPackWriter {
         }
     }
 
-    fun writeInt64(value: Long) {
+    override fun writeInt64(value: Long) {
         when {
             value in 0..0x7F -> writeByte(value.toByte())
             value in -0x20L..-1L -> writeByte(value.toByte())
@@ -50,7 +50,7 @@ class MsgPackWriter {
         }
     }
 
-    fun writeUint32(value: UInt) {
+    override fun writeUint32(value: UInt) {
         val v = value.toLong()
         when {
             v <= 0x7F -> writeByte(v.toByte())
@@ -60,7 +60,7 @@ class MsgPackWriter {
         }
     }
 
-    fun writeUint64(value: ULong) {
+    override fun writeUint64(value: ULong) {
         val v = value.toLong()
         val vu = value
         when {
@@ -72,22 +72,22 @@ class MsgPackWriter {
         }
     }
 
-    fun writeFloat32(value: Float) {
+    override fun writeFloat32(value: Float) {
         writeByte(0xCA.toByte())
         val bits = value.toRawBits()
         writeU32(bits)
     }
 
-    fun writeFloat64(value: Double) {
+    override fun writeFloat64(value: Double) {
         writeByte(0xCB.toByte())
         val bits = value.toRawBits()
         writeU32((bits shr 32).toInt())
         writeU32(bits.toInt())
     }
 
-    fun writeNull() { writeByte(0xC0.toByte()) }
+    override fun writeNull() { writeByte(0xC0.toByte()) }
 
-    fun writeBytes(value: ByteArray) {
+    override fun writeBytes(value: ByteArray) {
         val len = value.size
         when {
             len <= 0xFF -> { writeByte(0xC4.toByte()); writeByte(len.toByte()) }
@@ -97,7 +97,7 @@ class MsgPackWriter {
         buf.addAll(value.toList())
     }
 
-    fun beginObject(fieldCount: Int) {
+    override fun beginObject(fieldCount: Int) {
         when {
             fieldCount <= 0x0F -> writeByte((0x80 or fieldCount).toByte())
             fieldCount <= 0xFFFF -> { writeByte(0xDE.toByte()); writeU16(fieldCount) }
@@ -105,10 +105,10 @@ class MsgPackWriter {
         }
     }
 
-    fun writeField(name: String) { writeString(name) }
-    fun endObject() {}
+    override fun writeField(name: String) { writeString(name) }
+    override fun endObject() {}
 
-    fun beginArray(elementCount: Int) {
+    override fun beginArray(elementCount: Int) {
         when {
             elementCount <= 0x0F -> writeByte((0x90 or elementCount).toByte())
             elementCount <= 0xFFFF -> { writeByte(0xDC.toByte()); writeU16(elementCount) }
@@ -116,8 +116,10 @@ class MsgPackWriter {
         }
     }
 
-    fun nextElement() {}
-    fun endArray() {}
+    override fun nextElement() {}
+    override fun endArray() {}
 
-    fun toBytes(): ByteArray = buf.toByteArray()
+    override fun writeEnum(value: String) { writeString(value) }
+
+    override fun toBytes(): ByteArray = buf.toByteArray()
 }

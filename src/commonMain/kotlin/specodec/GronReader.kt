@@ -1,6 +1,6 @@
 package specodec
 
-class GronReader(data: ByteArray) {
+class GronReader(data: ByteArray) : SpecReader {
     private val lines: MutableList<Pair<String, String>> = mutableListOf()
     private var cursor: Int = 0
     private val ctx: MutableList<CtxInfo> = mutableListOf()
@@ -67,13 +67,13 @@ class GronReader(data: ByteArray) {
         return result.dropLast(padCount).toByteArray()
     }
 
-    fun readString(): String = unescape(lines[cursor++].second)
-    fun readBool(): Boolean = lines[cursor++].second == "true"
-    fun readInt32(): Int = lines[cursor++].second.toInt()
-    fun readInt64(): Long = unescape(lines[cursor++].second).toLong()
-    fun readUint32(): UInt = lines[cursor++].second.toUInt()
-    fun readUint64(): ULong = unescape(lines[cursor++].second).toULong()
-    fun readFloat32(): Float {
+    override fun readString(): String = unescape(lines[cursor++].second)
+    override fun readBool(): Boolean = lines[cursor++].second == "true"
+    override fun readInt32(): Int = lines[cursor++].second.toInt()
+    override fun readInt64(): Long = unescape(lines[cursor++].second).toLong()
+    override fun readUint32(): UInt = lines[cursor++].second.toUInt()
+    override fun readUint64(): ULong = unescape(lines[cursor++].second).toULong()
+    override fun readFloat32(): Float {
         val v = lines[cursor++].second
         return if (v == "-0") -0f else v.toFloat()
     }
@@ -81,19 +81,21 @@ class GronReader(data: ByteArray) {
         val v = lines[cursor++].second
         return if (v == "-0") -0.0 else v.toDouble()
     }
-    fun readFloat64(): Double {
+    override fun readFloat64(): Double {
         val v = lines[cursor++].second
         return if (v == "-0") -0.0 else v.toDouble()
     }
-    fun readNull() { if (lines[cursor++].second != "null") throw SCodecError("internal", "gron: expected null") }
-    fun readBytes(): ByteArray = b64(unescape(lines[cursor++].second))
+    override fun readNull() { if (lines[cursor++].second != "null") throw SCodecError("internal", "gron: expected null") }
+    override fun readBytes(): ByteArray = b64(unescape(lines[cursor++].second))
 
-    fun beginObject() {
+    override fun readEnum(): String = unescape(lines[cursor++].second)
+
+    override fun beginObject() {
         val line = lines[cursor++]
         ctx.add(CtxInfo(line.first, "object"))
     }
 
-    fun hasNextField(): Boolean {
+    override fun hasNextField(): Boolean {
         if (cursor >= lines.size) return false
         val pfx = ctx.last().prefix + "."
         val p = lines[cursor].first
@@ -102,20 +104,20 @@ class GronReader(data: ByteArray) {
         return !rem.contains(".") && !rem.contains("[")
     }
 
-    fun readFieldName(): String {
+    override fun readFieldName(): String {
         val pfx = ctx.last().prefix + "."
         return lines[cursor].first.substring(pfx.length)
     }
 
     fun nextFieldSeparator() {}
-    fun endObject() { ctx.removeAt(ctx.size - 1) }
+    override fun endObject() { ctx.removeAt(ctx.size - 1) }
 
-    fun beginArray() {
+    override fun beginArray() {
         val line = lines[cursor++]
         ctx.add(CtxInfo(line.first, "array", -1))
     }
 
-    fun hasNextElement(): Boolean {
+    override fun hasNextElement(): Boolean {
         if (cursor >= lines.size) return false
         val arr = ctx.last()
         val ni = arr.index + 1
@@ -126,11 +128,11 @@ class GronReader(data: ByteArray) {
 
     fun nextElementSeparator() {}
     fun nextElement() { ctx.last().index++ }
-    fun endArray() { ctx.removeAt(ctx.size - 1) }
+    override fun endArray() { ctx.removeAt(ctx.size - 1) }
 
-    fun isNull(): Boolean = cursor < lines.size && lines[cursor].second == "null"
+    override fun isNull(): Boolean = cursor < lines.size && lines[cursor].second == "null"
 
-    fun skip() {
+    override fun skip() {
         val sp = lines[cursor++].first
         while (cursor < lines.size) {
             val np = lines[cursor].first

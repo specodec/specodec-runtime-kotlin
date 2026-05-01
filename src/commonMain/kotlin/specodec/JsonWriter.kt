@@ -3,7 +3,7 @@ package specodec
 import kotlin.math.abs
 import kotlin.math.floor
 
-class JsonWriter {
+class JsonWriter : SpecWriter {
     private val sb: StringBuilder = StringBuilder()
     private val firstItem: MutableList<Boolean> = mutableListOf()
 
@@ -40,31 +40,31 @@ class JsonWriter {
         return s.toString()
     }
 
-    fun writeString(value: String) {
+    override fun writeString(value: String) {
         sb.append('"')
         escape(value)
         sb.append('"')
     }
 
-    fun writeBool(value: Boolean) {
+    override fun writeBool(value: Boolean) {
         sb.append(if (value) "true" else "false")
     }
 
-    fun writeInt32(value: Int) {
+    override fun writeInt32(value: Int) {
         sb.append(value)
     }
 
-    fun writeInt64(value: Long) {
+    override fun writeInt64(value: Long) {
         sb.append('"')
         sb.append(value)
         sb.append('"')
     }
 
-    fun writeUint32(value: UInt) {
+    override fun writeUint32(value: UInt) {
         sb.append(value.toLong())
     }
 
-    fun writeUint64(value: ULong) {
+    override fun writeUint64(value: ULong) {
         sb.append('"')
         sb.append(value)
         sb.append('"')
@@ -78,39 +78,39 @@ class JsonWriter {
         return s
     }
 
-    fun writeFloat32(value: Float) {
+    override fun writeFloat32(value: Float) {
         val v = value
         if (v.isNaN() || v.isInfinite()) throw IllegalArgumentException("float32: NaN/Infinity not valid JSON")
         sb.append(fmtFloat(v.toDouble()))
     }
 
-    fun writeFloat64(value: Double) {
+    override fun writeFloat64(value: Double) {
         if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("float64: NaN/Infinity not valid JSON")
         sb.append(fmtFloat(value))
     }
 
-    fun writeNull() {
+    override fun writeNull() {
         sb.append("null")
     }
 
-    fun writeBytes(value: ByteArray) {
+    override fun writeBytes(value: ByteArray) {
         sb.append('"')
         sb.append(b64(value))
         sb.append('"')
     }
 
-    fun writeEnum(value: String) {
+    override fun writeEnum(value: String) {
         sb.append('"')
         escape(value)
         sb.append('"')
     }
 
-    fun beginObject() {
+    override fun beginObject(fieldCount: Int) {
         sb.append('{')
         firstItem.add(true)
     }
 
-    fun writeField(name: String) {
+    override fun writeField(name: String) {
         val top = firstItem.size - 1
         if (!firstItem[top]) sb.append(',')
         firstItem[top] = false
@@ -120,26 +120,26 @@ class JsonWriter {
         sb.append(':')
     }
 
-    fun endObject() {
+    override fun endObject() {
         firstItem.removeAt(firstItem.size - 1)
         sb.append('}')
     }
 
-    fun beginArray() {
+    override fun beginArray(elementCount: Int) {
         sb.append('[')
         firstItem.add(true)
     }
 
-    fun nextElement() {
+    override fun nextElement() {
         val top = firstItem.size - 1
         if (!firstItem[top]) sb.append(',')
         firstItem[top] = false
     }
 
-    fun endArray() {
+    override fun endArray() {
         firstItem.removeAt(firstItem.size - 1)
         sb.append(']')
     }
 
-    fun toBytes(): ByteArray = sb.toString().encodeToByteArray()
+    override fun toBytes(): ByteArray = sb.toString().encodeToByteArray()
 }

@@ -1,6 +1,6 @@
 package specodec
 
-class GronWriter {
+class GronWriter : SpecWriter {
     private val lines: MutableList<String> = mutableListOf()
     private val segments: MutableList<String> = mutableListOf("json")
     private val nesting: MutableList<NestInfo> = mutableListOf()
@@ -55,48 +55,49 @@ class GronWriter {
         lines.add("${buildPath()} = $raw;")
     }
 
-    fun writeString(value: String) = emit("\"${escape(value)}\"")
-    fun writeBool(value: Boolean) = emit(if (value) "true" else "false")
-    fun writeInt32(value: Int) = emit(value.toString())
-    fun writeInt64(value: Long) = emit("\"$value\"")
-    fun writeUint32(value: UInt) = emit(value.toString())
-    fun writeUint64(value: ULong) = emit("\"$value\"")
+    override fun writeString(value: String) = emit("\"${escape(value)}\"")
+    override fun writeBool(value: Boolean) = emit(if (value) "true" else "false")
+    override fun writeInt32(value: Int) = emit(value.toString())
+    override fun writeInt64(value: Long) = emit("\"$value\"")
+    override fun writeUint32(value: UInt) = emit(value.toString())
+    override fun writeUint64(value: ULong) = emit("\"$value\"")
 
-    fun writeFloat32(value: Double) {
+    override fun writeFloat32(value: Float) {
+        val d = value.toDouble()
+        if (d.isNaN() || d.isInfinite()) throw IllegalArgumentException("NaN/Infinity")
+        emit(if (d == 0.0 && d.toRawBits() == 1L shl 63) "-0" else d.toString().trimEnd('0').trimEnd('.'))
+    }
+
+    override fun writeFloat64(value: Double) {
         if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("NaN/Infinity")
         emit(if (value == 0.0 && value.toRawBits() == 1L shl 63) "-0" else value.toString().trimEnd('0').trimEnd('.'))
     }
 
-    fun writeFloat64(value: Double) {
-        if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("NaN/Infinity")
-        emit(if (value == 0.0 && value.toRawBits() == 1L shl 63) "-0" else value.toString().trimEnd('0').trimEnd('.'))
-    }
+    override fun writeNull() = emit("null")
+    override fun writeBytes(value: ByteArray) = emit("\"${b64(value)}\"")
 
-    fun writeNull() = emit("null")
-    fun writeBytes(value: ByteArray) = emit("\"${b64(value)}\"")
-
-    fun beginObject(fieldCount: Int) {
+    override fun beginObject(fieldCount: Int) {
         lines.add("${buildPath()} = {};")
         nesting.add(NestInfo(segments.size))
     }
 
-    fun writeField(name: String) {
+    override fun writeField(name: String) {
         val top = nesting.last()
         if (segments.size > top.depth) segments[segments.size - 1] = name
         else segments.add(name)
     }
 
-    fun endObject() {
+    override fun endObject() {
         val info = nesting.removeAt(nesting.size - 1)
         while (segments.size > info.depth) segments.removeAt(segments.size - 1)
     }
 
-    fun beginArray(elementCount: Int) {
+    override fun beginArray(elementCount: Int) {
         lines.add("${buildPath()} = [];")
         nesting.add(NestInfo(segments.size, -1))
     }
 
-    fun nextElement() {
+    override fun nextElement() {
         val info = nesting.last()
         info.arrayIndex++
         val seg = "[${info.arrayIndex}]"
@@ -104,10 +105,12 @@ class GronWriter {
         else segments.add(seg)
     }
 
-    fun endArray() {
+    override fun endArray() {
         val info = nesting.removeAt(nesting.size - 1)
         while (segments.size > info.depth) segments.removeAt(segments.size - 1)
     }
 
-    fun toBytes(): ByteArray = lines.joinToString("\n", postfix = "\n").encodeToByteArray()
+    override fun writeEnum(value: String) { emit("\"${escape(value)}\"") }
+
+    override fun toBytes(): ByteArray = lines.joinToString("\n", postfix = "\n").encodeToByteArray()
 }
