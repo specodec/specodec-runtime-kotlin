@@ -26,7 +26,7 @@ class FormatRegistry {
     }
 
     fun match(format: String): FormatEntry {
-        return entries.firstOrNull { e -> format.contains(e.name) } ?: entries.first()
+        return entries.firstOrNull { e -> format == e.name } ?: entries.first()
     }
 }
 
