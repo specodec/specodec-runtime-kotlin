@@ -63,9 +63,9 @@ class GronWriter : SpecWriter {
     override fun writeUint64(value: ULong) = emit("\"$value\"")
 
     override fun writeFloat32(value: Float) {
-        val d = value.toDouble()
-        if (d.isNaN() || d.isInfinite()) throw IllegalArgumentException("NaN/Infinity")
-        emit(if (d == 0.0 && d.toRawBits() == 1L shl 63) "-0" else d.toString().trimEnd('0').trimEnd('.'))
+        if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("float32: NaN/Infinity not valid")
+        if (value == 0f && (1f / value).isInfinite() && (1f / value) < 0) { emit("-0"); return }
+        emit(fmtFloat32(value))
     }
 
     override fun writeFloat64(value: Double) {

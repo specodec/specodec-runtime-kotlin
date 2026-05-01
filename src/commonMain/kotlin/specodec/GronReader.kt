@@ -77,10 +77,6 @@ class GronReader(data: ByteArray) : SpecReader {
         val v = lines[cursor++].second
         return if (v == "-0") -0f else v.toFloat()
     }
-    fun readFloat32AsDouble(): Double {
-        val v = lines[cursor++].second
-        return if (v == "-0") -0.0 else v.toDouble()
-    }
     override fun readFloat64(): Double {
         val v = lines[cursor++].second
         return if (v == "-0") -0.0 else v.toDouble()
@@ -109,7 +105,6 @@ class GronReader(data: ByteArray) : SpecReader {
         return lines[cursor].first.substring(pfx.length)
     }
 
-    fun nextFieldSeparator() {}
     override fun endObject() { ctx.removeAt(ctx.size - 1) }
 
     override fun beginArray() {
@@ -126,7 +121,6 @@ class GronReader(data: ByteArray) : SpecReader {
         return p == exp || p.startsWith("$exp.") || p.startsWith("$exp[")
     }
 
-    fun nextElementSeparator() {}
     fun nextElement() { ctx.last().index++ }
     override fun endArray() { ctx.removeAt(ctx.size - 1) }
 

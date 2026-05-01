@@ -79,9 +79,8 @@ class JsonWriter : SpecWriter {
     }
 
     override fun writeFloat32(value: Float) {
-        val v = value
-        if (v.isNaN() || v.isInfinite()) throw IllegalArgumentException("float32: NaN/Infinity not valid JSON")
-        sb.append(fmtFloat(v.toDouble()))
+        if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("float32: NaN/Infinity not valid JSON")
+        sb.append(fmtFloat32(value))
     }
 
     override fun writeFloat64(value: Double) {
