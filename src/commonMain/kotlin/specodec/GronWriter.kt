@@ -64,13 +64,12 @@ class GronWriter : SpecWriter {
 
     override fun writeFloat32(value: Float) {
         if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("float32: NaN/Infinity not valid")
-        if (value == 0f && (1f / value).isInfinite() && (1f / value) < 0) { emit("-0"); return }
-        emit(fmtFloat32(value))
+        emit(formatFloat32(value))
     }
 
     override fun writeFloat64(value: Double) {
         if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("NaN/Infinity")
-        emit(if (value == 0.0 && value.toRawBits() == 1L shl 63) "-0" else value.toString().trimEnd('0').trimEnd('.'))
+        emit(formatFloat64(value))
     }
 
     override fun writeNull() = emit("null")

@@ -75,11 +75,11 @@ class GronReader(data: ByteArray) : SpecReader {
     override fun readUint64(): ULong = unescape(lines[cursor++].second).toULong()
     override fun readFloat32(): Float {
         val v = lines[cursor++].second
-        return if (v == "-0") -0f else v.toFloat()
+        return v.toFloat()
     }
     override fun readFloat64(): Double {
         val v = lines[cursor++].second
-        return if (v == "-0") -0.0 else v.toDouble()
+        return v.toDouble()
     }
     override fun readNull() { if (lines[cursor++].second != "null") throw SCodecError("internal", "gron: expected null") }
     override fun readBytes(): ByteArray = b64(unescape(lines[cursor++].second))
