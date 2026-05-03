@@ -68,11 +68,9 @@ fun float32ToString(f: Float): String {
         
         if (q <= 9) {
             if (mv % 5UL == 0UL) {
-                vrIsTrailingZeros = multipleOfPowerOf5_64(mv, q)
-            } else if (acceptBounds) {
-                vmIsTrailingZeros = multipleOfPowerOf5_64(mm, q)
-            } else {
-                if (multipleOfPowerOf5_64(mp, q)) {
+vrIsTrailingZeros = multipleOfPowerOf5_32(mv.toUInt(), q)
+                vmIsTrailingZeros = multipleOfPowerOf5_32(mm.toUInt(), q)
+                if (multipleOfPowerOf5_32(mp.toUInt(), q)) {
                     vp--
                 }
             }
@@ -101,11 +99,11 @@ fun float32ToString(f: Float): String {
                 vp--
             }
         } else if (q < 31) {
-            vrIsTrailingZeros = multipleOfPowerOf2_64(mv, q - 1)
+            vrIsTrailingZeros = multipleOfPowerOf2_32(mv.toUInt(), q - 1)
             if (acceptBounds) {
-                vmIsTrailingZeros = multipleOfPowerOf5_64(mm, q)
+                vmIsTrailingZeros = multipleOfPowerOf5_32(mm.toUInt(), q)
             } else {
-                if (multipleOfPowerOf5_64(mp, q)) {
+                if (multipleOfPowerOf5_32(mp.toUInt(), q)) {
                     vp--
                 }
             }
@@ -149,7 +147,7 @@ fun float32ToString(f: Float): String {
             output++
         }
         val exp = e10 + removed
-        val olength = decimalLength17(output)
+        val olength = decimalLength9(output.toUInt())
         
         var result = ""
         if (sign) result = "-"
@@ -175,7 +173,7 @@ fun float32ToString(f: Float): String {
             output++
         }
         val exp = e10 + removed
-        val olength = decimalLength17(output)
+        val olength = decimalLength9(output.toUInt())
         
         var result = ""
         if (sign) result = "-"

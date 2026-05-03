@@ -24,6 +24,18 @@ fun decimalLength17(v: ULong): Int {
     return 1
 }
 
+fun decimalLength9(v: UInt): Int {
+    if (v >= 100000000U) return 9
+    if (v >= 10000000U) return 8
+    if (v >= 1000000U) return 7
+    if (v >= 100000U) return 6
+    if (v >= 10000U) return 5
+    if (v >= 1000U) return 4
+    if (v >= 100U) return 3
+    if (v >= 10U) return 2
+    return 1
+}
+
 fun mulShift32(m: ULong, factor: ULong, shift: Int): ULong {
     val factorLo = factor and 0xFFFFFFFFUL
     val factorHi = factor shr 32
@@ -83,4 +95,20 @@ fun multipleOfPowerOf2_64(value: ULong, q: Int): Boolean {
     if (q == 0) return true
     if (q >= 64) return value == 0UL
     return (value and ((1UL shl q) - 1UL)) == 0UL
+}
+
+fun multipleOfPowerOf5_32(value: UInt, q: Int): Boolean {
+    if (q == 0) return true
+    if (q >= 32) return value == 0U
+    var pow5: UInt = 5U
+    for (i in 1 until q) {
+        pow5 *= 5U
+    }
+    return (value % pow5) == 0U
+}
+
+fun multipleOfPowerOf2_32(value: UInt, q: Int): Boolean {
+    if (q == 0) return true
+    if (q >= 32) return value == 0U
+    return (value and ((1U shl q) - 1U)) == 0U
 }
