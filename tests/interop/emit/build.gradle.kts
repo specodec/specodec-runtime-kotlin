@@ -8,11 +8,10 @@ version = "0.0.1"
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
-    implementation("com.github.specodec:specodec-runtime-kotlin:main-SNAPSHOT")
+    implementation(files("specodec-kotlin-jvm-0.0.1.jar"))
 }
 
 application {
@@ -20,7 +19,7 @@ application {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
 
 sourceSets {

@@ -4,4 +4,4 @@ build/
 *.jar
 *.klib
 kotlin-js-store/
-.gradle.properties
+.gradle.properties.pnpm-store/
