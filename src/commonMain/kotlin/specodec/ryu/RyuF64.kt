@@ -1,35 +1,34 @@
-package ryu
+package specodec.ryu
 
-const val FLOAT_MANTISSA_BITS: Int = 23
-const val FLOAT_BIAS: Int = 127
-const val FLOAT_POW5_INV_BITCOUNT: Int = 59
-const val FLOAT_POW5_BITCOUNT: Int = 61
-
-fun float32ToString(f: Float): String {
-    val bits = f.toRawBits()
+const val DOUBLE_MANTISSA_BITS: Int = 52
+const val DOUBLE_BIAS: Int = 1023
+const val DOUBLE_POW5_INV_BITCOUNT: Int = 125
+const val DOUBLE_POW5_BITCOUNT: Int = 125
+fun float64ToString(d: Double): String {
+    val bits = d.toRawBits()
     
-    val sign = (bits shr 31) != 0
-    val ieeeMantissa = bits and 0x7FFFFF
-    val ieeeExponent = (bits shr 23) and 0xFF
+    val sign = (bits shr 63) != 0L
+    val ieeeMantissa = bits and 0xFFFFFFFFFFFFFL
+    val ieeeExponent = ((bits shr 52) and 0x7FFL).toInt()
     
-    if (ieeeExponent == 255) {
-        if (ieeeMantissa == 0) {
+    if (ieeeExponent == 2047) {
+        if (ieeeMantissa == 0L) {
             return if (sign) "-Infinity" else "Infinity"
         }
         return "NaN"
     }
-    if (ieeeExponent == 0 && ieeeMantissa == 0) {
+    if (ieeeExponent == 0 && ieeeMantissa == 0L) {
         return if (sign) "-0E0" else "0E0"
     }
     
     var e2: Int
     var m2: ULong
     if (ieeeExponent == 0) {
-        e2 = 1 - FLOAT_BIAS - FLOAT_MANTISSA_BITS - 2
+        e2 = 1 - DOUBLE_BIAS - DOUBLE_MANTISSA_BITS - 2
         m2 = ieeeMantissa.toULong()
     } else {
-        e2 = ieeeExponent - FLOAT_BIAS - FLOAT_MANTISSA_BITS - 2
-        m2 = ((1 shl FLOAT_MANTISSA_BITS) or ieeeMantissa).toULong()
+        e2 = ieeeExponent - DOUBLE_BIAS - DOUBLE_MANTISSA_BITS - 2
+        m2 = ((1L shl DOUBLE_MANTISSA_BITS) or ieeeMantissa).toULong()
     }
     
     val even = (m2 and 1UL) == 0UL
@@ -37,11 +36,11 @@ fun float32ToString(f: Float): String {
     
     val mv = m2 * 4UL
     val mp = mv + 2UL
-    var mmShift = 0
-    if (ieeeMantissa != 0 || ieeeExponent <= 1) {
-        mmShift = 1
+    var mmShift = 0UL
+    if (ieeeMantissa != 0L || ieeeExponent <= 1) {
+        mmShift = 1UL
     }
-    val mm = mv - 1UL - mmShift.toULong()
+    val mm = mv - 1UL - mmShift
     
     var vrIsTrailingZeros = false
     var vmIsTrailingZeros = false
@@ -51,26 +50,30 @@ fun float32ToString(f: Float): String {
     var vp: ULong
     var vm: ULong
     
+    // Tables are now direct literals, no init needed
+    
     if (e2 >= 0) {
         val q = log10Pow2(e2)
         e10 = q
-        val k = FLOAT_POW5_INV_BITCOUNT + pow5bits(q) - 1
+        val k = DOUBLE_POW5_INV_BITCOUNT + pow5bits(q) - 1
         val i = -e2 + q + k
         
-        vr = mulShift32(mv, FLOAT_POW5_INV_SPLIT[q] + 1UL, i)
-        vp = mulShift32(mp, FLOAT_POW5_INV_SPLIT[q] + 1UL, i)
-        vm = mulShift32(mm, FLOAT_POW5_INV_SPLIT[q] + 1UL, i)
+        vr = mulShift64(mv, DOUBLE_POW5_INV_SPLIT[q], i)
+        vp = mulShift64(mp, DOUBLE_POW5_INV_SPLIT[q], i)
+        vm = mulShift64(mm, DOUBLE_POW5_INV_SPLIT[q], i)
         
         if (q != 0 && (vp - 1UL) / 10UL <= vm / 10UL) {
-            val l = FLOAT_POW5_INV_BITCOUNT + pow5bits(q - 1) - 1
-            lastDigit = mulShift32(mv, FLOAT_POW5_INV_SPLIT[q - 1] + 1UL, -e2 + q - 1 + l) % 10UL
+            val l = DOUBLE_POW5_INV_BITCOUNT + pow5bits(q - 1) - 1
+            lastDigit = mulShift64(mv, DOUBLE_POW5_INV_SPLIT[q - 1], -e2 + q - 1 + l) % 10UL
         }
         
-        if (q <= 9) {
+        if (q <= 21) {
             if (mv % 5UL == 0UL) {
-vrIsTrailingZeros = multipleOfPowerOf5_32(mv.toUInt(), q)
-                vmIsTrailingZeros = multipleOfPowerOf5_32(mm.toUInt(), q)
-                if (multipleOfPowerOf5_32(mp.toUInt(), q)) {
+                vrIsTrailingZeros = multipleOfPowerOf5_64(mv, q)
+            } else if (acceptBounds) {
+                vmIsTrailingZeros = multipleOfPowerOf5_64(mm, q)
+            } else {
+                if (multipleOfPowerOf5_64(mp, q)) {
                     vp--
                 }
             }
@@ -79,31 +82,31 @@ vrIsTrailingZeros = multipleOfPowerOf5_32(mv.toUInt(), q)
         val q = log10Pow5(-e2)
         e10 = q + e2
         val i = -e2 - q
-        val k = pow5bits(i) - FLOAT_POW5_BITCOUNT
+        val k = pow5bits(i) - DOUBLE_POW5_BITCOUNT
         val j = q - k
         
-        vr = mulShift32(mv, FLOAT_POW5_SPLIT[i], j)
-        vp = mulShift32(mp, FLOAT_POW5_SPLIT[i], j)
-        vm = mulShift32(mm, FLOAT_POW5_SPLIT[i], j)
+        vr = mulShift64(mv, DOUBLE_POW5_SPLIT[i], j)
+        vp = mulShift64(mp, DOUBLE_POW5_SPLIT[i], j)
+        vm = mulShift64(mm, DOUBLE_POW5_SPLIT[i], j)
         
         if (q != 0 && (vp - 1UL) / 10UL <= vm / 10UL) {
-            val j2 = q - 1 - (pow5bits(i + 1) - FLOAT_POW5_BITCOUNT)
-            lastDigit = mulShift32(mv, FLOAT_POW5_SPLIT[i + 1], j2) % 10UL
+            val j2 = q - 1 - (pow5bits(i + 1) - DOUBLE_POW5_BITCOUNT)
+            lastDigit = mulShift64(mv, DOUBLE_POW5_SPLIT[i + 1], j2) % 10UL
         }
         
         if (q <= 1) {
             vrIsTrailingZeros = true
             if (acceptBounds) {
-                vmIsTrailingZeros = mmShift == 1
+                vmIsTrailingZeros = mmShift == 1UL
             } else {
                 vp--
             }
-        } else if (q < 31) {
-            vrIsTrailingZeros = multipleOfPowerOf2_32(mv.toUInt(), q - 1)
+        } else if (q < 63) {
+            vrIsTrailingZeros = multipleOfPowerOf2_64(mv, q - 1)
             if (acceptBounds) {
-                vmIsTrailingZeros = multipleOfPowerOf5_32(mm.toUInt(), q)
+                vmIsTrailingZeros = multipleOfPowerOf5_64(mm, q)
             } else {
-                if (multipleOfPowerOf5_32(mp.toUInt(), q)) {
+                if (multipleOfPowerOf5_64(mp, q)) {
                     vp--
                 }
             }
@@ -147,7 +150,7 @@ vrIsTrailingZeros = multipleOfPowerOf5_32(mv.toUInt(), q)
             output++
         }
         val exp = e10 + removed
-        val olength = decimalLength9(output.toUInt())
+        val olength = decimalLength17(output)
         
         var result = ""
         if (sign) result = "-"
@@ -173,7 +176,7 @@ vrIsTrailingZeros = multipleOfPowerOf5_32(mv.toUInt(), q)
             output++
         }
         val exp = e10 + removed
-        val olength = decimalLength9(output.toUInt())
+        val olength = decimalLength17(output)
         
         var result = ""
         if (sign) result = "-"

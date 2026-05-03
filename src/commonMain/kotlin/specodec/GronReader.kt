@@ -38,7 +38,7 @@ class GronReader(data: ByteArray) : SpecReader {
                     'r' -> sb.append('\r')
                     't' -> sb.append('\t')
                     'u' -> {
-                        sb.append(Integer.parseInt(s.substring(i + 1, i + 5), 16).toChar())
+                        sb.append(s.substring(i + 1, i + 5).toInt(16).toChar())
                         i += 4
                     }
                 }
@@ -75,10 +75,16 @@ class GronReader(data: ByteArray) : SpecReader {
     override fun readUint64(): ULong = unescape(lines[cursor++].second).toULong()
     override fun readFloat32(): Float {
         val v = lines[cursor++].second
+        if (v == "\"NaN\"") return Float.NaN
+        if (v == "\"Infinity\"") return Float.POSITIVE_INFINITY
+        if (v == "\"-Infinity\"") return Float.NEGATIVE_INFINITY
         return v.toFloat()
     }
     override fun readFloat64(): Double {
         val v = lines[cursor++].second
+        if (v == "\"NaN\"") return Double.NaN
+        if (v == "\"Infinity\"") return Double.POSITIVE_INFINITY
+        if (v == "\"-Infinity\"") return Double.NEGATIVE_INFINITY
         return v.toDouble()
     }
     override fun readNull() { if (lines[cursor++].second != "null") throw SCodecError("internal", "gron: expected null") }
@@ -118,10 +124,11 @@ class GronReader(data: ByteArray) : SpecReader {
         val ni = arr.index + 1
         val exp = arr.prefix + "[$ni]"
         val p = lines[cursor].first
-        return p == exp || p.startsWith("$exp.") || p.startsWith("$exp[")
+        val hasNext = p == exp || p.startsWith("$exp.") || p.startsWith("$exp[")
+        if (hasNext) arr.index = ni
+        return hasNext
     }
 
-    fun nextElement() { ctx.last().index++ }
     override fun endArray() { ctx.removeAt(ctx.size - 1) }
 
     override fun isNull(): Boolean = cursor < lines.size && lines[cursor].second == "null"

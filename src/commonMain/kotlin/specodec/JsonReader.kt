@@ -151,11 +151,25 @@ class JsonReader(data: ByteArray) : SpecReader {
     }
 
     override fun readFloat32(): Float {
+        if (peek() == '"') {
+            val s = parseString()
+            if (s == "NaN") return Float.NaN
+            if (s == "Infinity") return Float.POSITIVE_INFINITY
+            if (s == "-Infinity") return Float.NEGATIVE_INFINITY
+            return s.toFloatOrNull() ?: throw SCodecError("internal", "json: invalid float32: $s")
+        }
         val raw = parseNumberRaw()
         return raw.toFloatOrNull() ?: throw SCodecError("internal", "json: invalid float32: $raw")
     }
 
     override fun readFloat64(): Double {
+        if (peek() == '"') {
+            val s = parseString()
+            if (s == "NaN") return Double.NaN
+            if (s == "Infinity") return Double.POSITIVE_INFINITY
+            if (s == "-Infinity") return Double.NEGATIVE_INFINITY
+            return s.toDoubleOrNull() ?: throw SCodecError("internal", "json: invalid float64: $s")
+        }
         val raw = parseNumberRaw()
         return raw.toDoubleOrNull() ?: throw SCodecError("internal", "json: invalid float64: $raw")
     }

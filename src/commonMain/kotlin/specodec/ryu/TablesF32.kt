@@ -1,4 +1,4 @@
-package ryu
+package specodec.ryu
 
 val FLOAT_POW5_INV_SPLIT: ULongArray = ulongArrayOf(
     576460752303423489UL,

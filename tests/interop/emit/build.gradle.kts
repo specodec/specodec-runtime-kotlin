@@ -8,12 +8,25 @@ version = "0.0.1"
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
+
+dependencies {
+    implementation("com.github.specodec:specodec-runtime-kotlin:main-SNAPSHOT")
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("emit_kotlin.MainKt")
 }
 
 kotlin {
-    jvmToolchain(25)
+    jvmToolchain(21)
+}
+
+sourceSets {
+    main {
+        kotlin {
+            srcDirs("src/main/kotlin", "../emit_gen")
+        }
+    }
 }

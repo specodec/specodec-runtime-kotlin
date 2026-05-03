@@ -1,0 +1,7 @@
+.gradle/
+build/
+.kotlin/
+*.jar
+*.klib
+kotlin-js-store/
+.gradle.properties

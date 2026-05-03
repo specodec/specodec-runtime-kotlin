@@ -1,4 +1,4 @@
-package ryu
+package specodec.ryu
 
 val DOUBLE_POW5_INV_SPLIT: Array<ULongArray> = arrayOf(
     ulongArrayOf(1UL, 2305843009213693952UL),

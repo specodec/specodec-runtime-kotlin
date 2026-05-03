@@ -71,13 +71,23 @@ class JsonWriter : SpecWriter {
     }
 
     override fun writeFloat32(value: Float) {
-        if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("float32: NaN/Infinity not valid JSON")
-        sb.append(formatFloat32(value))
+        if (value.isNaN()) {
+            sb.append("\"NaN\"")
+        } else if (value.isInfinite()) {
+            sb.append(if (value > 0) "\"Infinity\"" else "\"-Infinity\"")
+        } else {
+            sb.append(formatFloat32(value))
+        }
     }
 
     override fun writeFloat64(value: Double) {
-        if (value.isNaN() || value.isInfinite()) throw IllegalArgumentException("float64: NaN/Infinity not valid JSON")
-        sb.append(formatFloat64(value))
+        if (value.isNaN()) {
+            sb.append("\"NaN\"")
+        } else if (value.isInfinite()) {
+            sb.append(if (value > 0) "\"Infinity\"" else "\"-Infinity\"")
+        } else {
+            sb.append(formatFloat64(value))
+        }
     }
 
     override fun writeNull() {
