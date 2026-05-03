@@ -3,7 +3,7 @@ WORKDIR /app
 ARG HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy
 ENV http_proxy=${HTTP_PROXY} https_proxy=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY} HTTPS_PROXY=${HTTPS_PROXY} ALL_PROXY=${ALL_PROXY}
 RUN mkdir -p src/main/kotlin
-COPY --from=specodec-kotlin src/commonMain/kotlin/specodec/ src/main/kotlin/specodec/
+COPY --from=specodec-runtime-kotlin src/commonMain/kotlin/specodec/ src/main/kotlin/specodec/
 COPY --from=run src/run.kt src/main/kotlin/
 COPY --from=run settings.gradle.kts .
 COPY --from=run build.gradle.kts .
