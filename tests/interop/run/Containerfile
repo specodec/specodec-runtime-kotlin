@@ -1,0 +1,7 @@
+FROM dhi.io/gradle:9-jdk25-alpine3.23-dev AS runner
+WORKDIR /app
+COPY build.gradle.kts settings.gradle.kts ./
+COPY src/ src/
+COPY vectors/ /app/vectors/
+RUN mkdir -p /app/output_kotlin/scalars
+RUN gradle run -q --no-daemon 2>&1
