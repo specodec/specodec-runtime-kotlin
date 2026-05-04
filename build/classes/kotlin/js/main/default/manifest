@@ -1,0 +1,11 @@
+abi_version=2.3.0
+builtins_platform=JS
+compiler_version=2.3.21
+ir_signature_versions=1,2
+jsOutputName=specodec-kotlin
+language_features=+AllowAnyAsAnActualTypeForExpectInterface +MultiPlatformProjects
+metadata_version=2.3.0
+serializedIrFileFingerprints=2r4w5ibpu4elf.1iqq03tpyln3r 1wqxfvfigv2lh.1xb0vihhymlz7 1wxqwwjsh62t5.7ndlqm0k7ign vde6ympi4xo.grh619ktr8mh 20v4f5ifugb8r.ep3vmn27v2db 29by154e0ppbj.1if6fxsbehes ybs34hjmzyf2.17zqchhbtwpif y6gxyuiikkhy.2yxvk4w19i6fj 113mtdiu9f9tr.3hclum43wjqt5 3rc5d7qjgrv1p.2sp7z9x7aii22 vluvgkssbzwl.dkdn7glyqpzc 9u7agfv1ge3.31k2fno7uvfeq 2kt4hf748atur.ll2eamy4xuo1 1eus9whyqihvq.arvgti3f0kce 3eedmupss3twa.2q185sz58c288
+serializedKlibFingerprint=27jw1pj37ojx4.3rhepsejntfhk
+unique_name=io.specodec\:specodec-kotlin
+wasm_targets=wasm-js

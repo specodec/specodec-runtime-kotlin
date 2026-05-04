@@ -1,0 +1,15 @@
+{
+  "name": "specodec-kotlin",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "packages/specodec-kotlin",
+    "packages/specodec-kotlin-test"
+  ],
+  "devDependencies": {},
+  "dependencies": {},
+  "peerDependencies": {},
+  "optionalDependencies": {},
+  "bundledDependencies": [],
+  "resolutions": {}
+}

@@ -1,0 +1,11 @@
+{
+  "version": "9",
+  "items": {
+    "7f7268a86bbb37b4e3b29c720189416a": {
+      "src": "/home/ytr/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-js/2.3.21/53167e39b1a8d422964733414410abde123f71ac/kotlin-stdlib-js-2.3.21.klib"
+    },
+    "35871bb913c689726b4c4a4f6a84edb8": {
+      "src": "/home/ytr/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-dom-api-compat/2.3.21/4e8101540262da4cdf0bdfbd725c2e739151cf70/kotlin-dom-api-compat-2.3.21.klib"
+    }
+  }
+}

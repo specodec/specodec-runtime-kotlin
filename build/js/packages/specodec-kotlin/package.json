@@ -1,0 +1,10 @@
+{
+  "name": "specodec-kotlin",
+  "version": "0.0.1",
+  "main": "kotlin/specodec-kotlin.js",
+  "devDependencies": {},
+  "dependencies": {},
+  "peerDependencies": {},
+  "optionalDependencies": {},
+  "bundledDependencies": []
+}
