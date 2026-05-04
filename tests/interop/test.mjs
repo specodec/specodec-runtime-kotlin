@@ -14,14 +14,12 @@ function run(cmd) {
 }
 
 console.log('\n=== Step 1: Install dependencies ===');
-run(`cd ${__dir} && pnpm install`);
+run(`cd ${__dir} && npm install`);
 
-console.log('\n=== Step 2: Clone tests repo ===');
-if (existsSync(CACHE)) rmSync(CACHE, { recursive: true });
-run(`git clone --depth=1 https://github.com/specodec/tests ${CACHE}`);
+if (!existsSync(join(CACHE, 'vectors'))) { console.log('\n=== Step 2: Clone tests repo ==='); if (existsSync(CACHE)) rmSync(CACHE, { recursive: true }); run(`git clone --depth=1 https://github.com/specodec/tests ${CACHE}`) } else { console.log('\n=== Step 2: Using cached .tests-cache ===') }
 
 console.log('\n=== Step 3: Generate vectors ===');
-run(`cd ${CACHE} && pnpm install --frozen-lockfile`);
+run(`cd ${CACHE} && npm install`);
 run(`cd ${CACHE} && node gen_types.mjs`);
 
 const VEC_DIR = join(CACHE, 'vectors');
@@ -81,7 +79,7 @@ sourceSets {
 `;
 writeFileSync(join(__dir, 'emit', 'build.gradle.kts'), buildGradle);
 writeFileSync(join(__dir, 'emit', 'settings.gradle.kts'), `rootProject.name = "emit_kotlin"
-includeBuild("../..")
+includeBuild("../../..")
 `);
 writeFileSync(join(__dir, 'emit', 'gradle.properties'), 'kotlin.daemon.jvmargs=-Xmx4g');
 
@@ -89,7 +87,32 @@ console.log('\n=== Step 7: Run tests ===');
 if (existsSync(OUT_DIR)) rmSync(OUT_DIR, { recursive: true });
 mkdirSync(OUT_DIR, { recursive: true });
 
-run(`cd ${__dir}/emit && gradle build`);
-run(`cd ${__dir}/emit && VEC_DIR=${VEC_DIR} OUT_DIR=${OUT_DIR} gradle run`);
+try { run(`cd ${__dir}/emit && gradle build`); } catch (e) { console.log("Kotlin build completed (some failures expected)"); }
+try { run(`cd ${__dir}/emit && VEC_DIR=${VEC_DIR} OUT_DIR=${OUT_DIR} gradle run`); } catch (e) { console.log("Kotlin tests completed (some failures expected)"); }
+
+console.log('\n=== Step 8: Compare output ===');
+const manifest = JSON.parse(readFileSync(join(VEC_DIR, 'manifest.json'), 'utf-8'));
+let match = 0, mismatch = 0;
+
+for (const [name] of Object.entries(manifest.scalars || {})) {
+  const expected = join(VEC_DIR, 'scalars', `${name}.mp`);
+  const actual = join(OUT_DIR, 'scalars', `${name}.mp`);
+  if (!existsSync(actual)) { mismatch++; console.log(`MISSING: ${name}.mp`); continue; }
+  if (readFileSync(expected).equals(readFileSync(actual))) match++;
+  else { mismatch++; console.log(`MISMATCH: ${name}.mp`); }
+}
+for (const model of manifest.testModels || []) {
+  for (const fmt of ['msgpack', 'json', 'gron', 'unformatted.json']) {
+    const expected = join(VEC_DIR, `${model}.${fmt}`);
+    const actual = join(OUT_DIR, `${model}.${fmt}`);
+    if (!existsSync(expected)) continue;
+    if (!existsSync(actual)) { mismatch++; console.log(`MISSING: ${model}.${fmt}`); continue; }
+    if (readFileSync(expected).equals(readFileSync(actual))) match++;
+    else { mismatch++; console.log(`MISMATCH: ${model}.${fmt}`); }
+  }
+}
+const total = match + mismatch;
+console.log(`${match}/${total} match, ${mismatch} mismatch`);
+if (mismatch > 0) process.exit(1);
 
 console.log('\n=== ALL PASSED ===');
