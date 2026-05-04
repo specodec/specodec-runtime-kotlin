@@ -46,7 +46,7 @@ const srcDir = join(__dir, 'emit', 'src', 'main', 'kotlin');
 if (!existsSync(srcDir)) mkdirSync(srcDir, { recursive: true });
 run(`cd ${__dir} && VEC_DIR=${VEC_DIR} node generate_emit_runner.mjs`);
 
-console.log('\n=== Step 6: Setup build.gradle.kts ===');
+console.log('\n=== Step 6: Setup build.gradle.kts (local source) ===');
 const buildGradle = `plugins {
     kotlin("jvm") version "2.3.21"
     application
@@ -60,7 +60,7 @@ repositories {
 }
 
 dependencies {
-    implementation(files("specodec-kotlin-jvm-0.0.1.jar"))
+    implementation(project(":specodec-runtime-kotlin"))
 }
 
 application {
@@ -80,14 +80,12 @@ sourceSets {
 }
 `;
 writeFileSync(join(__dir, 'emit', 'build.gradle.kts'), buildGradle);
-writeFileSync(join(__dir, 'emit', 'settings.gradle.kts'), 'rootProject.name = "emit_kotlin"');
+writeFileSync(join(__dir, 'emit', 'settings.gradle.kts'), `rootProject.name = "emit_kotlin"
+includeBuild("../..")
+`);
 writeFileSync(join(__dir, 'emit', 'gradle.properties'), 'kotlin.daemon.jvmargs=-Xmx4g');
 
-console.log('\n=== Step 7: Download Kotlin runtime from GitHub release ===');
-const jarUrl = "https://github.com/specodec/specodec-runtime-kotlin/releases/download/v0.0.1/specodec-kotlin-jvm-0.0.1.jar";
-run(`curl -x 127.0.0.1:17890 -L -o ${join(__dir, 'emit', 'specodec-kotlin-jvm-0.0.1.jar')} ${jarUrl}`);
-
-console.log('\n=== Step 8: Run tests ===');
+console.log('\n=== Step 7: Run tests ===');
 if (existsSync(OUT_DIR)) rmSync(OUT_DIR, { recursive: true });
 mkdirSync(OUT_DIR, { recursive: true });
 
