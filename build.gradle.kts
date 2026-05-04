@@ -4,6 +4,7 @@ plugins {
 
 group = "io.specodec"
 version = "0.0.1"
+base.archivesName = "specodec-runtime-kotlin"
 
 repositories {
     mavenCentral()
