@@ -81,7 +81,7 @@ writeFileSync(join(__dir, 'emit', 'build.gradle.kts'), buildGradle);
 writeFileSync(join(__dir, 'emit', 'settings.gradle.kts'), `rootProject.name = "emit_kotlin"
 includeBuild("../../..")
 `);
-writeFileSync(join(__dir, 'emit', 'gradle.properties'), 'kotlin.daemon.jvmargs=-Xmx4g');
+writeFileSync(join(__dir, 'emit', 'gradle.properties'), 'org.gradle.jvmargs=-Xmx8g -XX:MaxMetaspaceSize=1g\nkotlin.daemon.jvmargs=-Xmx8g');
 
 console.log('\n=== Step 7: Run tests ===');
 if (existsSync(OUT_DIR)) rmSync(OUT_DIR, { recursive: true });
