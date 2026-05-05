@@ -1,7 +1,7 @@
 package emit_kotlin
 
 import specodec.*
-import alltypes.*
+import all_types.*
 import java.io.File
 
 val vecDir = System.getenv("VEC_DIR") ?: error("VEC_DIR not set")

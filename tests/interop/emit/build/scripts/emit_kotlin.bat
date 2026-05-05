@@ -70,7 +70,7 @@ echo location of your Java installation. 1>&2
 :execute
 @rem Setup the command line
 
-set CLASSPATH=%APP_HOME%\lib\emit_kotlin-0.0.1.jar;%APP_HOME%\lib\specodec-kotlin-jvm-0.0.1.jar;%APP_HOME%\lib\kotlin-stdlib-2.3.21.jar;%APP_HOME%\lib\annotations-13.0.jar
+set CLASSPATH=%APP_HOME%\lib\emit_kotlin-0.0.1.jar;%APP_HOME%\lib\specodec-runtime-kotlin-jvm-0.0.1.jar;%APP_HOME%\lib\kotlin-stdlib-2.3.21.jar;%APP_HOME%\lib\annotations-13.0.jar
 
 
 @rem Execute emit_kotlin
