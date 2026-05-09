@@ -1,9 +1,22 @@
 package emit_kotlin
 
 import specodec.*
+import all_types_arrays.*
+import all_types_edge.*
+import all_types_enums.*
+import all_types_extra.*
+import all_types_many.*
+import all_types_mixed.*
 import all_types_nested_deep.*
 import all_types_nested.*
+import all_types_nests.*
+import all_types_opt.*
+import all_types_pairs.*
+import all_types_recursive.*
+import all_types_scalars.*
 import all_types.*
+import all_types_unions.*
+import all_types_wide.*
 import java.io.File
 
 val vecDir = System.getenv("VEC_DIR") ?: error("VEC_DIR not set")
@@ -756,8 +769,21 @@ fun main() {
 
     // Model tests (by namespace)
     val (r_all_types_p, r_all_types_f) = runAllTypes(vecDir, outDir); passed += r_all_types_p; failed += r_all_types_f
+    val (r_all_types__scalars_p, r_all_types__scalars_f) = runAllTypesScalars(vecDir, outDir); passed += r_all_types__scalars_p; failed += r_all_types__scalars_f
+    val (r_all_types__opt_p, r_all_types__opt_f) = runAllTypesOpt(vecDir, outDir); passed += r_all_types__opt_p; failed += r_all_types__opt_f
+    val (r_all_types__pairs_p, r_all_types__pairs_f) = runAllTypesPairs(vecDir, outDir); passed += r_all_types__pairs_p; failed += r_all_types__pairs_f
+    val (r_all_types__many_p, r_all_types__many_f) = runAllTypesMany(vecDir, outDir); passed += r_all_types__many_p; failed += r_all_types__many_f
+    val (r_all_types__arrays_p, r_all_types__arrays_f) = runAllTypesArrays(vecDir, outDir); passed += r_all_types__arrays_p; failed += r_all_types__arrays_f
+    val (r_all_types__nests_p, r_all_types__nests_f) = runAllTypesNests(vecDir, outDir); passed += r_all_types__nests_p; failed += r_all_types__nests_f
+    val (r_all_types__mixed_p, r_all_types__mixed_f) = runAllTypesMixed(vecDir, outDir); passed += r_all_types__mixed_p; failed += r_all_types__mixed_f
+    val (r_all_types__recursive_p, r_all_types__recursive_f) = runAllTypesRecursive(vecDir, outDir); passed += r_all_types__recursive_p; failed += r_all_types__recursive_f
+    val (r_all_types__wide_p, r_all_types__wide_f) = runAllTypesWide(vecDir, outDir); passed += r_all_types__wide_p; failed += r_all_types__wide_f
+    val (r_all_types__edge_p, r_all_types__edge_f) = runAllTypesEdge(vecDir, outDir); passed += r_all_types__edge_p; failed += r_all_types__edge_f
+    val (r_all_types__extra_p, r_all_types__extra_f) = runAllTypesExtra(vecDir, outDir); passed += r_all_types__extra_p; failed += r_all_types__extra_f
     val (r_all_types_nested_p, r_all_types_nested_f) = runAllTypesNested(vecDir, outDir); passed += r_all_types_nested_p; failed += r_all_types_nested_f
     val (r_all_types_nested_deep_p, r_all_types_nested_deep_f) = runAllTypesNestedDeep(vecDir, outDir); passed += r_all_types_nested_deep_p; failed += r_all_types_nested_deep_f
+    val (r_all_types__enums_p, r_all_types__enums_f) = runAllTypesEnums(vecDir, outDir); passed += r_all_types__enums_p; failed += r_all_types__enums_f
+    val (r_all_types__unions_p, r_all_types__unions_f) = runAllTypesUnions(vecDir, outDir); passed += r_all_types__unions_p; failed += r_all_types__unions_f
 
 
     println("emit-kotlin: $passed passed, $failed failed")

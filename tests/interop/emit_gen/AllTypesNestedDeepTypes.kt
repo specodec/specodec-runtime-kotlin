@@ -8,7 +8,7 @@ data class DeepModel(
     val count: Long,
 )
 
-private fun writeDeepModel(w: SpecWriter, obj: DeepModel) {
+fun writeDeepModel(w: SpecWriter, obj: DeepModel) {
     w.beginObject(2)
     w.writeField("payload"); w.writeBytes(obj.payload)
     w.writeField("count"); w.writeInt64(obj.count)

@@ -1,2 +1,2 @@
 
-<specodec-kotlin_commonMain>:specodec:specodec.ryu
+$<specodec-runtime-kotlin_commonMain>:specodec:specodec.ryu

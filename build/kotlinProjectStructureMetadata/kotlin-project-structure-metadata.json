@@ -26,6 +26,12 @@
         "sourceSet": [
           "commonMain"
         ]
+      },
+      {
+        "name": "linuxX64ApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
       }
     ],
     "sourceSets": [

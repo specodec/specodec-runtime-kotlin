@@ -1,1 +1,1 @@
-rootProject.name = "specodec-kotlin"
+rootProject.name = "specodec-runtime-kotlin"

@@ -12,3 +12,13 @@ output/
 .tests-cache/
 .emit-gen/
 .emit-gen/
+*.log
+.DS_Store
+.cache/
+*.swp
+*.swo
+*~
+build/
+.gradle/
+*.jar
+!gradle-wrapper.jar

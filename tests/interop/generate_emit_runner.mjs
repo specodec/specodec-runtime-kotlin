@@ -9,8 +9,11 @@ const VEC_DIR = process.env.VEC_DIR || path.join(__dir, ".tests-cache", "vectors
 const manifestPath = path.join(VEC_DIR, "manifest.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
 
-const models = manifest.testModels || [];
+const models = [...(manifest.testModels || []), ...(manifest.testUnions || [])];
 const scalars = manifest.scalars || {};
+const testUnions = new Set(manifest.testUnions || []);
+function isUnionTest(name) { return testUnions.has(name); }
+function unionNameOf(testName) { return testName.replace(/_[^_]+$/, ''); }
 
 function toPascalCase(name) {
   let result = name.replace(/\./g, '_').replace(/-/g, '_');
@@ -76,6 +79,15 @@ for (const f of ktFiles) {
     const modelName = m[1].replace(/Codec$/, '');
     modelPackage[modelName] = pkg;
   }
+  for (const model of models) {
+    if (isUnionTest(model)) {
+      const uname = unionNameOf(model);
+      if (content.includes(uname + 'Codec')) {
+        modelPackage[uname] = pkg;
+        modelPackage[model] = pkg;
+      }
+    }
+  }
 }
 
 // --- Scalar test functions ---
@@ -139,6 +151,7 @@ for (const [ns, nsModels] of Object.entries(nsGroups)) {
   let modelCalls = '';
 
   for (const model of nsModels) {
+    const codecName = isUnionTest(model) ? unionNameOf(model) : model;
     modelFuncs += `
 fun testModel${model}(): Pair<Int, Int> {
     var passed = 0
@@ -146,9 +159,9 @@ fun testModel${model}(): Pair<Int, Int> {
     try {
         val data = File("\${vecDir}/${model}.msgpack").readBytes()
         val r = MsgPackReader(data)
-        val obj = ${model}Codec.decode(r)
+        val obj = ${codecName}Codec.decode(r)
         val w = MsgPackWriter()
-        ${model}Codec.encode(w, obj)
+        ${codecName}Codec.encode(w, obj)
         val out = File("\${outDir}/${model}.msgpack")
         out.parentFile?.mkdirs()
         out.writeBytes(w.toBytes())
@@ -160,9 +173,9 @@ fun testModel${model}(): Pair<Int, Int> {
     try {
         val data = File("\${vecDir}/${model}.json").readBytes()
         val r = JsonReader(data)
-        val obj = ${model}Codec.decode(r)
+        val obj = ${codecName}Codec.decode(r)
         val w = JsonWriter()
-        ${model}Codec.encode(w, obj)
+        ${codecName}Codec.encode(w, obj)
         val out = File("\${outDir}/${model}.json")
         out.parentFile?.mkdirs()
         out.writeBytes(w.toBytes())
@@ -174,9 +187,9 @@ fun testModel${model}(): Pair<Int, Int> {
     try {
         val data = File("\${vecDir}/${model}.unformatted.json").readBytes()
         val r = JsonReader(data)
-        val obj = ${model}Codec.decode(r)
+        val obj = ${codecName}Codec.decode(r)
         val w = JsonWriter()
-        ${model}Codec.encode(w, obj)
+        ${codecName}Codec.encode(w, obj)
         val out = File("\${outDir}/${model}.unformatted.json")
         out.parentFile?.mkdirs()
         out.writeBytes(w.toBytes())
@@ -188,9 +201,9 @@ fun testModel${model}(): Pair<Int, Int> {
     try {
         val data = File("\${vecDir}/${model}.gron").readBytes()
         val r = GronReader(data)
-        val obj = ${model}Codec.decode(r)
+        val obj = ${codecName}Codec.decode(r)
         val w = GronWriter()
-        ${model}Codec.encode(w, obj)
+        ${codecName}Codec.encode(w, obj)
         val out = File("\${outDir}/${model}.gron")
         out.parentFile?.mkdirs()
         out.writeBytes(w.toBytes())

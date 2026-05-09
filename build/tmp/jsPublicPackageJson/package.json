@@ -1,7 +1,7 @@
 {
-  "name": "specodec-kotlin",
+  "name": "specodec-runtime-kotlin",
   "version": "0.0.1",
-  "main": "specodec-kotlin.js",
+  "main": "specodec-runtime-kotlin.js",
   "devDependencies": {},
   "dependencies": {},
   "peerDependencies": {},

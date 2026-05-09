@@ -8,7 +8,7 @@ data class NestedSimple(
     val value: Int,
 )
 
-private fun writeNestedSimple(w: SpecWriter, obj: NestedSimple) {
+fun writeNestedSimple(w: SpecWriter, obj: NestedSimple) {
     w.beginObject(2)
     w.writeField("name"); w.writeString(obj.name)
     w.writeField("value"); w.writeInt32(obj.value)
