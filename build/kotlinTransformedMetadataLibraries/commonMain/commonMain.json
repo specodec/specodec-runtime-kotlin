@@ -1,7 +1,0 @@
-[
-  {
-    "moduleId": "module org.jetbrains.kotlin:kotlin-stdlib:2.3.21",
-    "file": "/src/specodec-runtime-kotlin/build/kotlinTransformedMetadataLibraries/commonMain/org.jetbrains.kotlin-kotlin-stdlib-2.3.21-commonMain-F2oqMg.klib",
-    "sourceSetName": "commonMain"
-  }
-]

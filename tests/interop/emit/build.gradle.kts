@@ -7,11 +7,12 @@ group = "io.specodec"
 version = "0.0.1"
 
 repositories {
+    maven { url = uri("http://10.199.64.20:3000/api/packages/specodec/maven"); isAllowInsecureProtocol = true }
     mavenCentral()
 }
 
 dependencies {
-    implementation(project(":specodec-runtime-kotlin"))
+    implementation("io.specodec:specodec-runtime-kotlin-jvm:1.0.0")
 }
 
 application {

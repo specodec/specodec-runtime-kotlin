@@ -23,3 +23,4 @@ build/
 *.jar
 !gradle-wrapper.jar
 .npmrc
+kotlin-js-store/
