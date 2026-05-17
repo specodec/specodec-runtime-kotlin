@@ -1,4 +1,4 @@
 plugins { id 'org.jetbrains.kotlin.jvm' version '2.3.21'; id 'application' }
 repositories { mavenCentral() }
-dependencies { implementation files('../../build/libs/specodec-kotlin-jvm-0.0.1.jar') }
+dependencies { implementation files('../../build/libs/specodec-runtime-kotlin-jvm-0.0.1.jar') }
 application { mainClass = 'ryu.TestRyuKt' }
