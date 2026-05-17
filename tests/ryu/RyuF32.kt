@@ -69,10 +69,10 @@ fun float32ToString(f: Float): String {
         if (q <= 9) {
             if (mv % 5UL == 0UL) {
 vrIsTrailingZeros = multipleOfPowerOf5_32(mv.toUInt(), q)
+            } else if (acceptBounds) {
                 vmIsTrailingZeros = multipleOfPowerOf5_32(mm.toUInt(), q)
-                if (multipleOfPowerOf5_32(mp.toUInt(), q)) {
-                    vp--
-                }
+            } else if (multipleOfPowerOf5_32(mp.toUInt(), q)) {
+                vp--
             }
         }
     } else {
