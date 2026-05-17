@@ -1,6 +1,6 @@
 package specodec.ryu
 
-fun pow5bits(e: Int): Int = e * 1217359 / 524288 + 1
+fun pow5Bits(e: Int): Int = e * 1217359 / 524288 + 1
 fun log10Pow2(e: Int): Int = e * 78913 / 262144
 fun log10Pow5(e: Int): Int = e * 732923 / 1048576
 
