@@ -1,8 +1,7 @@
 {
-  "name": "specodec-kotlin-interop-test",
-  "version": "0.0.1",
+  "name": "specodec-interop-kotlin",
+  "version": "1.0.0",
   "type": "module",
-  "private": true,
   "scripts": {
     "test": "node test.mjs"
   },

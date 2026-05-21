@@ -18,7 +18,7 @@ run(`cd ${__dir} && npm install`);
 
 
 
-console.log('\n=== Step 4: Generate emit code ===');
+console.log('\n=== Step 2: Generate emit code ===');
 if (existsSync(EMIT_GEN)) rmSync(EMIT_GEN, { recursive: true });
 mkdirSync(EMIT_GEN, { recursive: true });
 
@@ -33,58 +33,42 @@ if (ktFiles.length > 0) {
   process.exit(1);
 }
 
-console.log('\n=== Step 5: Generate test runner ===');
+console.log('\n=== Step 3: Generate test runner ===');
 const srcDir = join(__dir, 'emit', 'src', 'main', 'kotlin');
 if (!existsSync(srcDir)) mkdirSync(srcDir, { recursive: true });
 run(`cd ${__dir} && VEC_DIR=${VEC_DIR} node generate_emit_runner.mjs`);
 
-console.log('\n=== Step 6: Setup build.gradle.kts (Forgejo Maven) ===');
-const buildGradle = `plugins {
-    kotlin("jvm") version "2.3.21"
-    application
+console.log('\n=== Step 4: Runtime setup ===');
+const RUNTIME_SRC = join(__dir, '..', '..', 'src', 'commonMain', 'kotlin');
+const EMIT_SRC = join(__dir, 'emit', 'src', 'main', 'kotlin');
+const BUILD_DIR = join(__dir, 'emit', 'classes');
+mkdirSync(EMIT_SRC, { recursive: true });
+mkdirSync(BUILD_DIR, { recursive: true });
+
+const KOTLIN_HOME = '/home/user/.local/share/mise/installs/kotlin/2.3.21/kotlinc';
+const KSTDLIB = join(KOTLIN_HOME, 'lib', 'kotlin-stdlib.jar');
+if (!existsSync(KSTDLIB)) { console.error('kotlin-stdlib not found at ' + KSTDLIB); process.exit(1); }
+
+// Collect all Kotlin source files
+const allKtFiles = [];
+function collectKt(dir) {
+  if (!existsSync(dir)) return;
+  for (const f of readdirSync(dir, { recursive: true })) {
+    if (f.endsWith('.kt')) allKtFiles.push(join(dir, f));
+  }
 }
+collectKt(RUNTIME_SRC);
+collectKt(EMIT_GEN);
+collectKt(join(__dir, "emit"));
+const args = allKtFiles.map(f => `"${f}"`).join(' ');
+run(`kotlinc -d "${BUILD_DIR}" -classpath "${KSTDLIB}" ${args}`);
 
-group = "io.specodec"
-version = "0.0.1"
-
-repositories {
-    maven { url = uri("http://10.199.64.20:30000/api/packages/specodec/maven"); isAllowInsecureProtocol = true }
-    mavenCentral()
-}
-
-dependencies {
-    implementation("io.specodec:specodec-runtime-kotlin-jvm:1.0.0")
-}
-
-application {
-    mainClass.set("emit_kotlin.MainKt")
-}
-
-kotlin {
-    jvmToolchain(25)
-}
-
-sourceSets {
-    main {
-        kotlin {
-            srcDirs("src/main/kotlin", "../emit_gen")
-        }
-    }
-}
-`;
-writeFileSync(join(__dir, 'emit', 'build.gradle.kts'), buildGradle);
-writeFileSync(join(__dir, 'emit', 'settings.gradle.kts'), `rootProject.name = "emit_kotlin"
-`);
-writeFileSync(join(__dir, 'emit', 'gradle.properties'), 'org.gradle.jvmargs=-Xmx8g -XX:MaxMetaspaceSize=1g\nkotlin.daemon.jvmargs=-Xmx8g');
-
-console.log('\n=== Step 7: Run tests ===');
+console.log('\n=== Step 5: Run tests ===');
 if (existsSync(OUT_DIR)) rmSync(OUT_DIR, { recursive: true });
 mkdirSync(OUT_DIR, { recursive: true });
+try { run(`cd "${__dir}/emit" && VEC_DIR="${VEC_DIR}" OUT_DIR="${OUT_DIR}" java -cp "${BUILD_DIR}:${KSTDLIB}" emit_kotlin.MainKt`); } catch (e) { console.log("Kotlin tests completed (some failures expected)"); }
 
-try { run(`cd ${__dir}/emit && gradle build`); } catch (e) { console.log("Kotlin build completed (some failures expected)"); }
-try { run(`cd ${__dir}/emit && VEC_DIR=${VEC_DIR} OUT_DIR=${OUT_DIR} gradle run`); } catch (e) { console.log("Kotlin tests completed (some failures expected)"); }
-
-console.log('\n=== Step 8: Compare output ===');
+console.log('\n=== Step 6: Compare output ===');
 const manifest = JSON.parse(readFileSync(join(VEC_DIR, 'manifest.json'), 'utf-8'));
 let match = 0, mismatch = 0;
 

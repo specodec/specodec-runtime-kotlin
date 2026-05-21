@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const EMIT_GEN = path.join(__dir, 'emit_gen');
-const VEC_DIR = process.env.VEC_DIR || path.join(__dir, ".tests-cache", "vectors");
+const VEC_DIR = process.env.VEC_DIR || path.join(__dir, "vectors");
 
 const manifestPath = path.join(VEC_DIR, "manifest.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
@@ -24,7 +24,7 @@ function toPascalCaseSnake(sn) {
   return sn.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
 }
 
-function getReadMethod(type) {
+function readMethod(type) {
   const map = {
     "int32": "readInt32",
     "int64": "readInt64",
@@ -39,7 +39,7 @@ function getReadMethod(type) {
   return map[type] || "readInt32";
 }
 
-function getWriteMethod(type) {
+function writeMethod(type) {
   const map = {
     "int32": "writeInt32",
     "int64": "writeInt64",
@@ -95,17 +95,17 @@ let scalarFuncs = '';
 let scalarCalls = '';
 for (const [name, info] of Object.entries(scalars)) {
   const pascal = toPascalCase(name);
-  const readMethod = getReadMethod(info.type);
-  const writeMethod = getWriteMethod(info.type);
+  const rm = readMethod(info.type);
+  const wm = writeMethod(info.type);
 
   scalarFuncs += `
 fun testScalar${pascal}(): Pair<Int, Int> {
     return try {
         val data = File("\${vecDir}/scalars/${name}.mp").readBytes()
         val r = MsgPackReader(data)
-        val value = r.${readMethod}()
+        val value = r.${rm}()
         val w = MsgPackWriter()
-        w.${writeMethod}(value)
+        w.${wm}(value)
         val out = File("\${outDir}/scalars/${name}.mp")
         out.parentFile?.mkdirs()
         out.writeBytes(w.toBytes())
