@@ -7,7 +7,7 @@ group = "io.specodec"
 version = "0.0.1"
 
 repositories {
-    maven { url = uri("http://10.199.64.20:3000/api/packages/specodec/maven"); isAllowInsecureProtocol = true }
+    maven { url = uri("http://10.199.64.20:30000/api/packages/specodec/maven"); isAllowInsecureProtocol = true }
     mavenCentral()
 }
 

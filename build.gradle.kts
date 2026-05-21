@@ -27,7 +27,7 @@ publishing {
             name = "forgejo"
             url = uri(
                 providers.environmentVariable("FORGEJO_URL")
-                    .getOrElse("http://10.199.64.20:3000")
+                    .getOrElse("http://10.199.64.20:30000")
                     + "/api/packages/specodec/maven"
             )
             isAllowInsecureProtocol = true
